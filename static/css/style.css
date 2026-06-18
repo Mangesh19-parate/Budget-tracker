@@ -133,39 +133,54 @@ a { color: inherit; text-decoration: none; }
     margin: 0 auto;
 }
 
+.hero-inner {
+    display: flex;
+    flex-direction: column;
+}
+
 .hero-badge {
-    display: inline-block;
-    background: var(--accent-light);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: rgba(26, 71, 42, 0.08);
     color: var(--accent);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 0.35rem 0.85rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.45rem 0.9rem;
     border-radius: 999px;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.4rem;
+}
+
+.hero-badge-lead {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--accent);
 }
 
 .hero-title {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    line-height: 1.1;
+    font-family: var(--font-body);
+    font-size: clamp(2.3rem, 4.5vw, 3.6rem);
+    line-height: 1.15;
     letter-spacing: -0.02em;
-    color: var(--ink);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.2rem;
 }
 
-.hero-title em {
-    font-style: italic;
+.hero-title-dark {
+    color: var(--ink);
+    font-weight: 800;
+}
+
+.hero-title-green {
     color: var(--accent);
+    font-weight: 800;
 }
 
 .hero-subtitle {
     font-size: 1.05rem;
     color: var(--ink-muted);
-    line-height: 1.7;
-    max-width: 460px;
-    margin-bottom: 2rem;
+    line-height: 1.8;
+    max-width: 520px;
+    margin-bottom: 2.1rem;
 }
 
 .hero-actions {
@@ -175,7 +190,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
-/* Mock card (hero visual)                                             */
+/* Mock browser / dashboard                                           */
 /* ------------------------------------------------------------------ */
 
 .hero-visual {
@@ -183,78 +198,139 @@ a { color: inherit; text-decoration: none; }
     justify-content: center;
 }
 
-.mock-card {
-    background: var(--paper-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 2rem;
+.mock-browser {
     width: 100%;
-    max-width: 380px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.06);
+    max-width: 430px;
+    background: #f6f7fb;
+    border: 1px solid rgba(15, 15, 15, 0.1);
+    border-radius: 22px;
+    box-shadow: 0 10px 35px rgba(0,0,0,0.06);
+    padding: 1.2rem 1.25rem 1.5rem;
+    position: relative;
 }
 
-.mock-card-header {
+.mock-window-controls {
+    position: absolute;
+    top: 14px;
+    left: 18px;
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1.75rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--border-soft);
+    gap: 0.4rem;
 }
 
-.mock-label {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--ink-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+.ctrl {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
 }
 
-.mock-total {
-    font-family: var(--font-display);
-    font-size: 1.75rem;
-    color: var(--ink);
+.ctrl-1 { background: #ff5f57; }
+.ctrl-2 { background: #febc2e; }
+.ctrl-3 { background: #28c840; }
+
+.mock-content {
+    margin-top: 0.35rem;
 }
 
-.mock-bars { display: flex; flex-direction: column; gap: 1rem; }
-
-.mock-bar-row {
+.mock-row-cards {
     display: grid;
-    grid-template-columns: 80px 1fr 60px;
-    align-items: center;
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+    margin-bottom: 1.15rem;
 }
 
-.mock-cat {
+.mock-stat-card {
+    background: #ffffff;
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 0.95rem 0.9rem;
+}
+
+.mock-stat-label {
     font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--ink-soft);
+    color: var(--ink-muted);
+    margin-bottom: 0.35rem;
+    font-weight: 600;
 }
 
-.mock-bar-track {
-    height: 6px;
-    background: var(--border-soft);
+.mock-stat-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 0.55rem;
+}
+
+.mock-stat-trend {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.mock-trend-down { color: #e85b5b; }
+.mock-trend-up { color: #1f9d55; }
+
+.mock-stat-sub {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-weight: 600;
+}
+
+.mock-categories-card {
+    background: #ffffff;
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 1rem 0.95rem;
+}
+
+.mock-cat-row {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.55rem 0;
+}
+
+.mock-cat-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink-muted);
+}
+
+.mock-cat-track {
+    height: 10px;
+    background: rgba(0,0,0,0.08);
     border-radius: 999px;
     overflow: hidden;
 }
 
-.mock-bar {
+.mock-cat-bar {
     height: 100%;
-    background: var(--accent);
     border-radius: 999px;
-    transition: width 0.6s ease;
 }
 
-.mock-bar-2 { background: var(--accent-2); }
-.mock-bar-3 { background: #5b7fa6; }
-.mock-bar-4 { background: #8b5e83; }
+.mock-cat-food { background: #f5a623; }
+.mock-cat-travel { background: #4a90e2; }
+.mock-cat-bills { background: #7b61ff; }
 
-.mock-amt {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--ink-muted);
-    text-align: right;
+@media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; text-align: center; }
+    .hero-inner { align-items: center; }
+    .hero-actions { justify-content: center; }
+    .hero-visual { margin-top: 1.8rem; }
 }
+
+@media (max-width: 600px) {
+    .nav-links a:not(.nav-cta) { display: none; }
+    .hero { padding: 3rem 1rem 2rem; }
+    .hero-title { font-size: 2.2rem; }
+    .mock-row-cards { grid-template-columns: 1fr; }
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Mock card (hero visual) (legacy styles)                         */
+/* ------------------------------------------------------------------ */
+/* Kept intentionally for backward compatibility with older markup. */
+
 
 /* ------------------------------------------------------------------ */
 /* Buttons                                                             */
