@@ -4,6 +4,39 @@
 
 {% block content %}
 
+<!-- How it works modal (vanilla JS) -->
+<div class="video-modal-overlay" id="howItWorksModalOverlay" aria-hidden="true">
+    <div class="video-modal" role="dialog" aria-modal="true" id="howItWorksModal">
+        <button type="button" class="video-modal-close" aria-label="Close" id="howItWorksClose">✕</button>
+
+        <div class="video-modal-body">
+            <div id="video-container" style="display: none;">
+                <iframe
+                    id="howItWorksVideo"
+                    width="560"
+                    height="315"
+                    src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                    title="How it works"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* minimal styles so the modal doesn't affect the rest of the page */
+    .video-modal-overlay{position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.55);padding:80px 16px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .15s ease;}
+    .video-modal-overlay.is-open{opacity:1;pointer-events:auto;}
+    .video-modal{background:#fff;border-radius:14px;max-width:920px;width:100%;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;}
+    .video-modal-close{position:absolute;top:12px;right:12px;border:none;background:rgba(0,0,0,.06);border-radius:10px;width:40px;height:40px;cursor:pointer;font-size:18px;line-height:40px;}
+    .video-modal-body{padding:56px 16px 20px;}
+    @media (max-width: 640px){.video-modal-body{padding:56px 12px 16px;}.video-modal-close{top:10px;right:10px;}}
+    iframe{display:block;margin:0 auto;max-width:100%;}
+</style>
+
 <section class="hero">
     <div class="hero-inner">
         <div class="hero-badge">
@@ -22,7 +55,7 @@
 
         <div class="hero-actions">
             <a href="{{ url_for('register') }}" class="btn-primary">Create free account</a>
-            <a href="#" class="btn-ghost">See how it works</a>
+            <a href="#howItWorksModal" class="btn-ghost js-open-video-modal" aria-haspopup="dialog" aria-controls="howItWorksModal">See how it works</a>
         </div>
     </div>
 
@@ -110,4 +143,66 @@
     </div>
 </section>
 
+<script>
+    (function () {
+        var overlay = document.getElementById('howItWorksModalOverlay');
+        var modal = document.getElementById('howItWorksModal');
+        var closeBtn = document.getElementById('howItWorksClose');
+        var iframe = document.getElementById('howItWorksVideo');
+        var videoContainer = document.getElementById('video-container');
+        var openButtons = document.querySelectorAll('.js-open-video-modal');
+
+        var originalSrc = iframe ? iframe.getAttribute('src') : '';
+
+        function openModal(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            if (!overlay) return;
+
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+
+            if (videoContainer) videoContainer.style.display = 'block';
+
+            // (Re)load iframe to start playback and ensure it doesn't keep playing in background
+            if (iframe && originalSrc) {
+                iframe.setAttribute('src', '');
+                iframe.setAttribute('src', originalSrc);
+            }
+        }
+
+        function closeModal() {
+            if (!overlay) return;
+
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
+
+            if (videoContainer) videoContainer.style.display = 'none';
+            if (iframe) iframe.setAttribute('src', '');
+        }
+
+        openButtons.forEach(function (btn) {
+            btn.addEventListener('click', openModal);
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeModal);
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function (e) {
+                if (modal && !modal.contains(e.target)) {
+                    closeModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay && overlay.classList.contains('is-open')) {
+                closeModal();
+            }
+        });
+    })();
+</script>
+
 {% endblock %}
+
