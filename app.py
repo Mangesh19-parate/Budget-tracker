@@ -1,6 +1,17 @@
 from flask import Flask, render_template
 
+from database.db import get_db, init_db, seed_db
+
 app = Flask(__name__)
+
+
+# ------------------------------------------------------------------ #
+# Startup (DB init + seed)                                         #
+# ------------------------------------------------------------------ #
+
+with app.app_context():
+    init_db()
+    seed_db()
 
 
 # ------------------------------------------------------------------ #
@@ -10,6 +21,7 @@ app = Flask(__name__)
 @app.route("/")
 def landing():
     return render_template("landing.html")
+
 
 
 @app.route("/register")
