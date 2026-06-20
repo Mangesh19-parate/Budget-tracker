@@ -1,12 +1,7 @@
 # TODO
 
-- [ ] Implement Registration feature per `.claude/specs/02-registration.md`
-  - [x] Set `app.secret_key` (if missing) and update `/register` route to handle GET + POST with validation + flash
-  - [x] Add `create_user()` helper to `database/db.py`
-  - [x] Update `templates/register.html` form (POST to `url_for('register')`, fields, confirm_password) and flash rendering
-  - [x] Run app sanity check (start server, validate route wiring)
-  - [x] Verify password stored as hash in `spendly.db`
-
-  - [x] Run tests (pytest) if available
-
+- [x] Implement Step 4: Protected `/profile` route + hardcoded context in `app.py`
+- [x] Create `templates/profile.html` extending `base.html` with: user info card, summary stats, transaction history table, category breakdown; ensure no inline styles/hex colors and badge styling uses CSS classes
+- [ ] Verify navbar shows logged-in state on `/profile` (based on `base.html` expectations)
+- [ ] Manual test: redirect behavior when logged out / authenticated
 

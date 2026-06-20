@@ -88,6 +88,12 @@ def login():
         return render_template("login.html")
 
 
+# POST
+    
+    # (If already logged in, landing redirect handled above)
+
+
+
     # POST
     email = (request.form.get("email") or "").strip()
     password = request.form.get("password") or ""
@@ -106,7 +112,9 @@ def login():
         return render_template("login.html")
 
     session["user_id"] = int(user["id"])
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
+
+
 
 
 # ------------------------------------------------------------------ #
@@ -122,7 +130,69 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    # Hardcoded UI data for Step 4 (no DB queries)
+    user = {
+        "name": "Aarav Mehta",
+        "email": "aarav.mehta@example.com",
+        "initials": "AM",
+        "member_since": "Jan 2024",
+    }
+
+    summary = {
+        "total_spent": "₹ 48,250",
+        "transaction_count": 17,
+        "top_category": "Food & Groceries",
+    }
+
+    transactions = [
+        {
+            "date": "2024-06-18",
+            "description": "Weekly groceries",
+            "category": "Food & Groceries",
+            "badge_class": "badge-food",
+            "amount": "₹ 2,430",
+        },
+        {
+            "date": "2024-06-12",
+            "description": "Metro card recharge",
+            "category": "Travel",
+            "badge_class": "badge-travel",
+            "amount": "₹ 650",
+        },
+        {
+            "date": "2024-06-05",
+            "description": "Electricity bill",
+            "category": "Bills",
+            "badge_class": "badge-bills",
+            "amount": "₹ 3,920",
+        },
+        {
+            "date": "2024-05-29",
+            "description": "Dinner with friends",
+            "category": "Food & Groceries",
+            "badge_class": "badge-food",
+            "amount": "₹ 1,850",
+        },
+    ]
+
+    categories = [
+        {"name": "Food & Groceries", "total": "₹ 18,920"},
+        {"name": "Bills", "total": "₹ 12,640"},
+        {"name": "Travel", "total": "₹ 9,350"},
+        {"name": "Shopping", "total": "₹ 7,340"},
+    ]
+
+    return render_template(
+        "profile.html",
+        user=user,
+        summary=summary,
+        transactions=transactions,
+        categories=categories,
+    )
+
 
 
 @app.route("/expenses/add")
