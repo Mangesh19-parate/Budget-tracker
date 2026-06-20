@@ -6,6 +6,9 @@ Exposes:
 - get_db(): returns a configured SQLite connection
 - init_db(): creates the schema
 - seed_db(): inserts demo data once (idempotent)
+
+Additional helpers used by auth:
+- get_user_by_email(email)
 """
 
 from __future__ import annotations
@@ -97,6 +100,27 @@ def create_user(name: str, email: str, password: str) -> int:
         conn.close()
 
 
+def get_user_by_email(email: str) -> sqlite3.Row | None:
+    """Fetch a user by email.
+
+    Returns None if not found.
+    """
+
+    conn = get_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT id, email, password_hash
+            FROM users
+            WHERE email = ?
+            """,
+            (email,),
+        ).fetchone()
+        return row
+    finally:
+        conn.close()
+
+
 def _current_month_dates() -> list[str]:
     """Create YYYY-MM-DD strings spread across the current month."""
 
@@ -125,7 +149,6 @@ def seed_db() -> None:
 
     conn = get_db()
     try:
-        # If there is already at least one user, assume seeding already ran.
         existing = conn.execute("SELECT id FROM users LIMIT 1").fetchone()
         if existing is not None:
             return
@@ -145,7 +168,6 @@ def seed_db() -> None:
 
         expense_dates = _current_month_dates()
 
-        # 8 expenses, covering multiple categories (repeat one if needed)
         sample_expenses = [
             (25.50, "Food", expense_dates[0], "Groceries"),
             (12.75, "Transport", expense_dates[1], "Bus pass"),
