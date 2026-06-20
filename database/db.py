@@ -56,13 +56,43 @@ def init_db() -> None:
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );"""
 
-
-
     conn = get_db()
     try:
         conn.execute(schema_users)
         conn.execute(schema_expenses)
         conn.commit()
+    finally:
+        conn.close()
+
+
+def create_user(name: str, email: str, password: str) -> int:
+    """Create a user row.
+
+    Args:
+        name: Display name
+        email: Unique email address
+        password: Plaintext password to be hashed
+
+    Returns:
+        Newly created user's id.
+
+    Raises:
+        sqlite3.IntegrityError: if email is already taken.
+    """
+
+    password_hash = generate_password_hash(password)
+
+    conn = get_db()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO users (name, email, password_hash)
+            VALUES (?, ?, ?)
+            """,
+            (name, email, password_hash),
+        )
+        conn.commit()
+        return int(cursor.lastrowid)
     finally:
         conn.close()
 
@@ -132,7 +162,10 @@ def seed_db() -> None:
             INSERT INTO expenses (user_id, amount, category, date, description)
             VALUES (?, ?, ?, ?, ?)
             """,
-            [(demo_user_id, amount, category, d, desc) for amount, category, d, desc in sample_expenses],
+            [
+                (demo_user_id, amount, category, d, desc)
+                for amount, category, d, desc in sample_expenses
+            ],
         )
 
         conn.commit()

@@ -1,8 +1,13 @@
-from flask import Flask, render_template
+from flask import Flask, abort, flash, redirect, render_template, request, url_for
 
-from database.db import get_db, init_db, seed_db
+from database.db import create_user, init_db, seed_db
 
 app = Flask(__name__)
+
+# Needed for Flask flash() messages.
+# In production, replace with a secure environment-based secret.
+app.secret_key = "dev-secret-key-change-me"
+
 
 
 # ------------------------------------------------------------------ #
@@ -24,9 +29,43 @@ def landing():
 
 
 
-@app.route("/register")
+@app.route("/register", methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    # POST
+    name = (request.form.get("name") or "").strip()
+    email = (request.form.get("email") or "").strip()
+    password = request.form.get("password") or ""
+    confirm_password = request.form.get("confirm_password") or ""
+
+    # Validation: non-empty fields
+    if not name or not email or not password or not confirm_password:
+        flash("All fields are required.", "error")
+        return render_template("register.html")
+
+    # Validation: password match
+    if password != confirm_password:
+        flash("Passwords do not match.", "error")
+        return render_template("register.html")
+
+    # Create user
+    try:
+        create_user(name=name, email=email, password=password)
+    except Exception as exc:
+        # Handle duplicate email based on sqlite constraint
+        # (sqlite will raise an IntegrityError for UNIQUE violation)
+        from sqlite3 import IntegrityError
+
+        if isinstance(exc, IntegrityError):
+            flash("Email already registered.", "error")
+            return render_template("register.html")
+        raise
+
+    flash("Account created. Please sign in.", "success")
+    return redirect(url_for("login"))
+
 
 
 @app.route("/login")

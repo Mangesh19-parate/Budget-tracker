@@ -1,7 +1,12 @@
-- [x] Inspect templates/base.html and add Terms and Conditions / Privacy Policy links in footer with href="#".
-- [x] Add Terms and Conditions route GET /terms in app.py (already present).
-- [x] Create templates/terms.html with generic terms content.
-- [x] Update landing page: replace "See how it works" link/button to open a modal.
-- [x] Add modal overlay markup to templates/landing.html.
-- [x] Add vanilla JS (no dependencies) to open/close modal and stop video playback on close.
+# TODO
+
+- [ ] Implement Registration feature per `.claude/specs/02-registration.md`
+  - [x] Set `app.secret_key` (if missing) and update `/register` route to handle GET + POST with validation + flash
+  - [x] Add `create_user()` helper to `database/db.py`
+  - [x] Update `templates/register.html` form (POST to `url_for('register')`, fields, confirm_password) and flash rendering
+  - [x] Run app sanity check (start server, validate route wiring)
+  - [x] Verify password stored as hash in `spendly.db`
+
+  - [x] Run tests (pytest) if available
+
 
