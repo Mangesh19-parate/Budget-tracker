@@ -6,7 +6,18 @@ def _is_logged_in() -> bool:
     return "user_id" in session
 
 
-from database.db import create_user, get_user_by_email, init_db, seed_db
+from datetime import datetime
+
+from database.db import (
+    create_user,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+    list_category_totals_for_user,
+    list_recent_expenses_for_user,
+    seed_db,
+    summarise_expenses_for_user,
+)
 
 app = Flask(__name__)
 
@@ -128,61 +139,110 @@ def logout():
 
 
 
+# ------------------------------------------------------------------ #
+# Profile display helpers                                            #
+# ------------------------------------------------------------------ #
+
+_BADGE_BY_CATEGORY = {
+    "Food": "badge-food",
+    "Transport": "badge-transport",
+    "Travel": "badge-travel",
+    "Bills": "badge-bills",
+    "Health": "badge-health",
+    "Entertainment": "badge-entertainment",
+    "Shopping": "badge-shopping",
+    "Other": "badge-other",
+}
+
+
+def _format_inr(amount: float) -> str:
+    """Format an amount in Indian rupee style: ₹ 1,23,456.00.
+
+    Right-most three digits form one group; remaining digits are grouped
+    in pairs from the right. Decimal portion always shows two digits.
+    """
+    sign = "-" if amount < 0 else ""
+    amount = abs(float(amount))
+    whole, _, frac = f"{amount:.2f}".partition(".")
+    if len(whole) <= 3:
+        grouped = whole
+    else:
+        head, tail = whole[:-3], whole[-3:]
+        parts = []
+        while len(head) > 2:
+            parts.append(head[-2:])
+            head = head[:-2]
+        parts.append(head)
+        grouped = ",".join(reversed(parts)) + "," + tail
+    return f"₹ {sign}{grouped}.{frac}"
+
+
+def _initials(name: str) -> str:
+    """First letter of the first two whitespace-split words, uppercased."""
+    parts = (name or "").split()
+    letters = [p[0].upper() for p in parts if p][:2]
+    return "".join(letters) or "?"
+
+
+def _badge_class(category: str) -> str:
+    """Map a category name to its CSS badge class (with a safe fallback)."""
+    return _BADGE_BY_CATEGORY.get(category or "", "badge-other")
+
+
+def _member_since(created_at: str) -> str:
+    """Convert a SQLite CURRENT_TIMESTAMP string into 'Mon YYYY' format."""
+    if not created_at:
+        return "—"
+    try:
+        return datetime.strptime(created_at, "%Y-%m-%d %H:%M:%S").strftime("%b %Y")
+    except ValueError:
+        return created_at[:7] or "—"
+
+
 @app.route("/profile")
 def profile():
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
         return redirect(url_for("login"))
 
-    # Hardcoded UI data for Step 4 (no DB queries)
+    user_id = int(user_id)
+    user_row = get_user_by_id(user_id)
+    if user_row is None:
+        # Stale session pointing at a deleted account — clear and redirect.
+        session.clear()
+        return redirect(url_for("login"))
+
+    summary_row = summarise_expenses_for_user(user_id)
+    raw_txns = list_recent_expenses_for_user(user_id)
+    raw_categories = list_category_totals_for_user(user_id)
+
     user = {
-        "name": "Aarav Mehta",
-        "email": "aarav.mehta@example.com",
-        "initials": "AM",
-        "member_since": "Jan 2024",
+        "name": user_row["name"],
+        "email": user_row["email"],
+        "initials": _initials(user_row["name"]),
+        "member_since": _member_since(user_row["created_at"]),
     }
 
     summary = {
-        "total_spent": "₹ 48,250",
-        "transaction_count": 17,
-        "top_category": "Food & Groceries",
+        "total_spent": _format_inr(summary_row["total_spent"]),
+        "transaction_count": summary_row["transaction_count"],
+        "top_category": summary_row["top_category"] or "—",
     }
 
     transactions = [
         {
-            "date": "2024-06-18",
-            "description": "Weekly groceries",
-            "category": "Food & Groceries",
-            "badge_class": "badge-food",
-            "amount": "₹ 2,430",
-        },
-        {
-            "date": "2024-06-12",
-            "description": "Metro card recharge",
-            "category": "Travel",
-            "badge_class": "badge-travel",
-            "amount": "₹ 650",
-        },
-        {
-            "date": "2024-06-05",
-            "description": "Electricity bill",
-            "category": "Bills",
-            "badge_class": "badge-bills",
-            "amount": "₹ 3,920",
-        },
-        {
-            "date": "2024-05-29",
-            "description": "Dinner with friends",
-            "category": "Food & Groceries",
-            "badge_class": "badge-food",
-            "amount": "₹ 1,850",
-        },
+            "date": t["date"],
+            "description": t["description"] or "",
+            "category": t["category"],
+            "badge_class": _badge_class(t["category"]),
+            "amount": _format_inr(t["amount"]),
+        }
+        for t in raw_txns
     ]
 
     categories = [
-        {"name": "Food & Groceries", "total": "₹ 18,920"},
-        {"name": "Bills", "total": "₹ 12,640"},
-        {"name": "Travel", "total": "₹ 9,350"},
-        {"name": "Shopping", "total": "₹ 7,340"},
+        {"name": c["category"], "total": _format_inr(c["total"])}
+        for c in raw_categories
     ]
 
     return render_template(

@@ -353,6 +353,12 @@ a { color: inherit; text-decoration: none; }
 
 .btn-primary:hover { background: var(--accent); }
 
+.btn-block {
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
 .btn-ghost {
     display: inline-block;
     background: transparent;
@@ -840,6 +846,48 @@ a { color: inherit; text-decoration: none; }
 
 .badge-bills, .badge-travel, .badge-food {
     white-space: nowrap;
+}
+
+.badge-transport {
+    color: var(--accent);
+    background: rgba(26, 71, 42, 0.08);
+    border-color: rgba(26, 71, 42, 0.18);
+    white-space: nowrap;
+}
+
+.badge-health {
+    color: #1f9d55;
+    background: rgba(31, 157, 85, 0.10);
+    border-color: rgba(31, 157, 85, 0.25);
+    white-space: nowrap;
+}
+
+.badge-entertainment {
+    color: var(--accent-2);
+    background: var(--accent-2-light);
+    border-color: rgba(193, 127, 36, 0.25);
+    white-space: nowrap;
+}
+
+.badge-shopping {
+    color: #c14d4d;
+    background: rgba(193, 77, 77, 0.08);
+    border-color: rgba(193, 77, 77, 0.25);
+    white-space: nowrap;
+}
+
+.badge-other {
+    color: var(--ink-muted);
+    background: var(--paper-warm);
+    border-color: var(--border);
+    white-space: nowrap;
+}
+
+.empty-row {
+    text-align: center;
+    color: var(--ink-muted);
+    font-style: italic;
+    padding: 1.25rem 0.75rem;
 }
 
 .breakdown-list {
