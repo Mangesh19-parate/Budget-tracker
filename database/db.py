@@ -194,3 +194,123 @@ def seed_db() -> None:
     finally:
         conn.close()
 
+
+def summarise_expenses_for_user(user_id: int) -> dict:
+    """Return aggregate stats for a user's expenses.
+
+    Returns a dict with:
+        total_spent: float      — sum of all expense amounts (0.0 when empty)
+        transaction_count: int  — number of expense rows for this user
+        top_category: str | None — category with the highest total spend
+                                  (None when the user has no expenses;
+                                   ties broken alphabetically by category)
+
+    This helper is self-contained — it does NOT depend on
+    list_category_totals_for_user.
+    """
+
+    conn = get_db()
+    try:
+        totals_row = conn.execute(
+            """
+            SELECT COALESCE(SUM(amount), 0.0) AS total_spent,
+                   COUNT(*) AS transaction_count
+            FROM expenses
+            WHERE user_id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+
+        top_row = conn.execute(
+            """
+            SELECT category
+            FROM expenses
+            WHERE user_id = ?
+            GROUP BY category
+            ORDER BY SUM(amount) DESC, category ASC
+            LIMIT 1
+            """,
+            (user_id,),
+        ).fetchone()
+
+        return {
+            "total_spent": float(totals_row["total_spent"]),
+            "transaction_count": int(totals_row["transaction_count"]),
+            "top_category": top_row["category"] if top_row is not None else None,
+        }
+    finally:
+        conn.close()
+
+
+def list_category_totals_for_user(user_id: int, limit: int = 4) -> list[sqlite3.Row]:
+    """Return up to `limit` categories with the highest total spend for a user.
+
+    Each row has columns: category (str), total (float).
+    Ordered by total descending, ties broken alphabetically by category.
+    Returns an empty list when the user has no expenses.
+    """
+
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT category, COALESCE(SUM(amount), 0.0) AS total
+            FROM expenses
+            WHERE user_id = ?
+            GROUP BY category
+            ORDER BY total DESC, category ASC
+            LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+        return list(rows)
+    finally:
+        conn.close()
+
+
+def get_user_by_id(user_id: int) -> sqlite3.Row | None:
+    """Fetch a user by id.
+
+    Returns None if the row does not exist. Selects only the columns
+    needed by the profile page (never the password hash, even though
+    it's safe to expose to server-side code).
+    """
+
+    conn = get_db()
+    try:
+        row = conn.execute(
+            """
+            SELECT id, name, email, created_at
+            FROM users
+            WHERE id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+        return row
+    finally:
+        conn.close()
+
+
+def list_recent_expenses_for_user(user_id: int, limit: int = 5) -> list[sqlite3.Row]:
+    """Return up to `limit` most-recent expenses for the given user.
+
+    Sorted by expense date descending, then by id descending (newest first).
+    Returns an empty list when the user has no expenses.
+    """
+
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, amount, category, date, description
+            FROM expenses
+            WHERE user_id = ?
+            ORDER BY date DESC, id DESC
+            LIMIT ?
+            """,
+            (user_id, limit),
+        ).fetchall()
+        return list(rows)
+    finally:
+        conn.close()
+

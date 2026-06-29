@@ -44,7 +44,7 @@
                     <div class="stat">
                         <div class="stat-label">Top category</div>
                         <div class="stat-value">{{ summary.top_category }}</div>
-                        <div class="stat-sub">Based on hardcoded sample</div>
+                        <div class="stat-sub">Most-used category this account</div>
                     </div>
                 </div>
 
@@ -78,6 +78,10 @@
                             </td>
                             <td class="amount-col">{{ tx.amount }}</td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-row">No expenses yet — add one to get started.</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -100,16 +104,18 @@
                             <span class="breakdown-total">{{ cat.total }}</span>
                         </div>
                     </div>
+                    {% else %}
+                    <div class="breakdown-row empty-row">No spending yet.</div>
                     {% endfor %}
                 </div>
             </div>
 
             <div class="profile-card profile-tip-card">
-                <h2 class="section-title">What’s next?</h2>
+                <h2 class="section-title">Get started</h2>
                 <p class="muted">
-                    This profile page is intentionally UI-only for now: the data shown above is hardcoded.
-                    In the next step, transactions will be wired to the real database.
+                    Track your first expense to see it appear in your dashboard.
                 </p>
+                <a class="btn-primary btn-block" href="{{ url_for('landing') }}">Add an expense</a>
             </div>
         </div>
 
