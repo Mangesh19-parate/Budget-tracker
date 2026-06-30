@@ -195,42 +195,62 @@ def seed_db() -> None:
         conn.close()
 
 
-def summarise_expenses_for_user(user_id: int) -> dict:
-    """Return aggregate stats for a user's expenses.
+def summarise_expenses_for_user(
+    user_id: int,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict:
+    """Return aggregate stats for a user's expenses, optionally date-scoped.
+
+    Args:
+        user_id: Owning user id.
+        start: Optional inclusive lower bound (YYYY-MM-DD) on expenses.date.
+        end:   Optional inclusive upper bound (YYYY-MM-DD) on expenses.date.
+               When only one bound is provided, the other side is open.
 
     Returns a dict with:
-        total_spent: float      — sum of all expense amounts (0.0 when empty)
-        transaction_count: int  — number of expense rows for this user
-        top_category: str | None — category with the highest total spend
-                                  (None when the user has no expenses;
+        total_spent: float      — sum of all matching amounts (0.0 when empty)
+        transaction_count: int  — number of matching expense rows
+        top_category: str | None — top category within the match set
+                                  (None when no rows match;
                                    ties broken alphabetically by category)
 
     This helper is self-contained — it does NOT depend on
     list_category_totals_for_user.
     """
 
+    clauses = ["user_id = ?"]
+    params: list = [user_id]
+    if start is not None:
+        clauses.append("date >= ?")
+        params.append(start)
+    if end is not None:
+        clauses.append("date <= ?")
+        params.append(end)
+    where_sql = " AND ".join(clauses)
+
     conn = get_db()
     try:
         totals_row = conn.execute(
-            """
+            f"""
             SELECT COALESCE(SUM(amount), 0.0) AS total_spent,
                    COUNT(*) AS transaction_count
             FROM expenses
-            WHERE user_id = ?
+            WHERE {where_sql}
             """,
-            (user_id,),
+            tuple(params),
         ).fetchone()
 
         top_row = conn.execute(
-            """
+            f"""
             SELECT category
             FROM expenses
-            WHERE user_id = ?
+            WHERE {where_sql}
             GROUP BY category
             ORDER BY SUM(amount) DESC, category ASC
             LIMIT 1
             """,
-            (user_id,),
+            tuple(params),
         ).fetchone()
 
         return {
@@ -242,26 +262,44 @@ def summarise_expenses_for_user(user_id: int) -> dict:
         conn.close()
 
 
-def list_category_totals_for_user(user_id: int, limit: int = 4) -> list[sqlite3.Row]:
+def list_category_totals_for_user(
+    user_id: int,
+    limit: int = 4,
+    start: str | None = None,
+    end: str | None = None,
+) -> list[sqlite3.Row]:
     """Return up to `limit` categories with the highest total spend for a user.
+
+    Optionally scoped to ``start`` / ``end`` (YYYY-MM-DD, inclusive).
+    See ``summarise_expenses_for_user`` for argument semantics.
 
     Each row has columns: category (str), total (float).
     Ordered by total descending, ties broken alphabetically by category.
-    Returns an empty list when the user has no expenses.
+    Returns an empty list when no rows match.
     """
+
+    clauses = ["user_id = ?"]
+    params: list = [user_id]
+    if start is not None:
+        clauses.append("date >= ?")
+        params.append(start)
+    if end is not None:
+        clauses.append("date <= ?")
+        params.append(end)
+    where_sql = " AND ".join(clauses)
 
     conn = get_db()
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT category, COALESCE(SUM(amount), 0.0) AS total
             FROM expenses
-            WHERE user_id = ?
+            WHERE {where_sql}
             GROUP BY category
             ORDER BY total DESC, category ASC
             LIMIT ?
             """,
-            (user_id, limit),
+            tuple(params + [limit]),
         ).fetchall()
         return list(rows)
     finally:
@@ -291,24 +329,42 @@ def get_user_by_id(user_id: int) -> sqlite3.Row | None:
         conn.close()
 
 
-def list_recent_expenses_for_user(user_id: int, limit: int = 5) -> list[sqlite3.Row]:
+def list_recent_expenses_for_user(
+    user_id: int,
+    limit: int = 5,
+    start: str | None = None,
+    end: str | None = None,
+) -> list[sqlite3.Row]:
     """Return up to `limit` most-recent expenses for the given user.
 
+    Optionally scoped to ``start`` / ``end`` (YYYY-MM-DD, inclusive).
+    See ``summarise_expenses_for_user`` for argument semantics.
+
     Sorted by expense date descending, then by id descending (newest first).
-    Returns an empty list when the user has no expenses.
+    Returns an empty list when no rows match.
     """
+
+    clauses = ["user_id = ?"]
+    params: list = [user_id]
+    if start is not None:
+        clauses.append("date >= ?")
+        params.append(start)
+    if end is not None:
+        clauses.append("date <= ?")
+        params.append(end)
+    where_sql = " AND ".join(clauses)
 
     conn = get_db()
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT id, amount, category, date, description
             FROM expenses
-            WHERE user_id = ?
+            WHERE {where_sql}
             ORDER BY date DESC, id DESC
             LIMIT ?
             """,
-            (user_id, limit),
+            tuple(params + [limit]),
         ).fetchall()
         return list(rows)
     finally:

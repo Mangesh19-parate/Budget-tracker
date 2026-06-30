@@ -9,6 +9,27 @@
         <!-- Note: profile styles/badges are expected to be provided via static/css/style.css -->
 
 
+        <!-- Date range filter -->
+        <form class="filter-form" method="get" action="{{ url_for('profile') }}">
+            <div class="filters">
+                <div class="filter-field">
+                    <label for="filter-start">Start</label>
+                    <input class="filter-input" id="filter-start" type="date"
+                           name="start" value="{{ filter.start or '' }}">
+                </div>
+                <div class="filter-field">
+                    <label for="filter-end">End</label>
+                    <input class="filter-input" id="filter-end" type="date"
+                           name="end" value="{{ filter.end or '' }}">
+                </div>
+                <div class="filter-actions">
+                    <button type="submit" class="btn-primary">Apply</button>
+                    <a class="btn-ghost" href="{{ url_for('profile') }}">Clear</a>
+                </div>
+            </div>
+        </form>
+
+
         <!-- User info card -->
         <div class="profile-grid">
             <div class="profile-card profile-user-card">
@@ -51,6 +72,16 @@
                 <div class="stats-actions">
                     <a class="btn-ghost" href="{{ url_for('landing') }}">Back to home</a>
                 </div>
+
+                {% if filter.active %}
+                <div class="active-filter">
+                    <span class="muted">Showing expenses from</span>
+                    <span class="badge filter-pill">{{ filter.start or '…' }}</span>
+                    <span class="muted">to</span>
+                    <span class="badge filter-pill">{{ filter.end or '…' }}</span>
+                    <a class="active-filter-clear" href="{{ url_for('profile') }}">(Clear)</a>
+                </div>
+                {% endif %}
             </div>
         </div>
 

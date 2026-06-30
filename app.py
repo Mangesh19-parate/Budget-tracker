@@ -189,6 +189,22 @@ def _badge_class(category: str) -> str:
     return _BADGE_BY_CATEGORY.get(category or "", "badge-other")
 
 
+def _parse_date_or_none(raw: str | None) -> str | None:
+    """Parse a YYYY-MM-DD query-string value, returning None on any failure.
+
+    Returns the original string on success (preserving the canonical form so
+    it round-trips into SQL bind params); None for missing values, empty
+    strings, or anything that does not match ``%Y-%m-%d`` exactly.
+    """
+    if not raw:
+        return None
+    try:
+        datetime.strptime(raw, "%Y-%m-%d")
+    except ValueError:
+        return None
+    return raw
+
+
 def _member_since(created_at: str) -> str:
     """Convert a SQLite CURRENT_TIMESTAMP string into 'Mon YYYY' format."""
     if not created_at:
@@ -212,9 +228,18 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    summary_row = summarise_expenses_for_user(user_id)
-    raw_txns = list_recent_expenses_for_user(user_id)
-    raw_categories = list_category_totals_for_user(user_id)
+    # Date filter — silent ignore on any invalid input.
+    start = _parse_date_or_none(request.args.get("start"))
+    end = _parse_date_or_none(request.args.get("end"))
+    filter_ctx = {
+        "active": start is not None or end is not None,
+        "start": start,
+        "end": end,
+    }
+
+    summary_row = summarise_expenses_for_user(user_id, start=start, end=end)
+    raw_txns = list_recent_expenses_for_user(user_id, start=start, end=end)
+    raw_categories = list_category_totals_for_user(user_id, start=start, end=end)
 
     user = {
         "name": user_row["name"],
@@ -251,6 +276,7 @@ def profile():
         summary=summary,
         transactions=transactions,
         categories=categories,
+        filter=filter_ctx,
     )
 
 
