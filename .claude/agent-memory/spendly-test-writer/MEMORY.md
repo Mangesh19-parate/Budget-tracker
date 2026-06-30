@@ -1,0 +1,2 @@
+- [Spendly test patterns](spendly-test-patterns.md) — DB isolation, fixture scopes, demo creds for writing isolated pytest tests
+- [No prior conftest](no-prior-conftest.md) — Spendly has no tests/conftest.py; keep fixtures local to each test file
